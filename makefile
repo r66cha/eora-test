@@ -1,0 +1,13 @@
+docker-build:
+	docker compose up --build -d
+
+
+freeze:
+	uv pip freeze > requirements.txt
+
+
+install:
+	uv pip install -r requirements.txt
+
+parse:
+	uv run python -m src.core.parser.parser
