@@ -1,69 +1,28 @@
-"""Parser module."""
+"""Модуль парсера."""
 
 # -- Imports
 
+import time
 import re
 import csv
 import requests
 from bs4 import BeautifulSoup
-from src.core.parser.models import EoraInfo, EoraInfoJSON
 
+# from src.core.parser import EoraInfo
+from src.core.schemas import EoraInfoSchema
+from src.core.parser import EXCLUDE_KEYWORDS
+from src.core.parser.pages import PARSE_PAGES
 
 # --
 
-EXCLUDE_KEYWORDS = {
-    "О компании",
-    "Вакансии",
-    "Контакты",
-    "+7",
-    "HELLO@",
-    "Политика конфиденциальности",
-    "En",
-    "ИННОПОЛИС",
-    "ул.",
-    "Портфолио",
-    "Блог",
-    "СТАТЬЯ",
-    "Статья",
-    "Услуги",
-    "Нажимая на кнопку",
-    "Отправить",
-    "Позвоните нам",
-    "Напишите нам",
-    "Бот поддержки",
-    "Робот для колл-центра",
-    "Цифровой аватар",
-    "Консультация в ИИ",
-    "ИИ-ассистент с ChatGPT",
-    "Навыки для голосовых ассистентов",
-    "Топ 4 профессии",
-    "Что такое Telegram Web App",
-    "5 преимуществ голосового ассистента Маруся",
-    "Все права защищены",
-    "ООО «ЕОРА ДАТА ЛАБ»",
-    "И наши менеджеры ответят на ваши вопросы",
-    "Заполните форму",
-    "Оставить заявку",
-    "нажимая на кнопку, вы соглашаетесь с нашей политикой в отношении обработки персональных данных пользователей",
-    "нажимая на кнопку, вы соглашаетесь с нашей политикой в отношении обработки персональных данных пользователя",
-    "+7 495 414-40-49",
-    "2025 © EORA. Все права защищены.",
-    "hello@eora.ru",
-    "тимлид",
-    "2025 © eora. все права защищены. ооо «еора дата лаб»",
-    "владислав виноградов",
-    "ул. университетская, д. 7",
-    "полезное",
-    "топ 4 профессии, которые заменит gpt-4",
-    "что такое telegram web appдля интернет-магазинов?",
-}
+MAX_RETRIES = 5
+RETRY_DELAY = 2
 
 # --
 
 
 def normalize_text(text: str) -> str:
-    # Заменяем все виды пробельных символов (включая U+00A0) на обычный пробел
-    text = re.sub(r"[\u00a0\s]+", " ", text)
+    text = re.sub(r"[\u00a0\u200e\s]+", " ", text)
     return text.strip().lower()
 
 
@@ -85,39 +44,68 @@ def clean_texts(texts: list[str]) -> list[str]:
     return result
 
 
-def parser(url: str):
+def get_full_text(tag) -> str:
+    return "".join(tag.strings)
 
-    res = requests.get(url=url)
-    soup = BeautifulSoup(res.text, "lxml")
 
-    h1_tags = soup.find_all("h1", class_="tn-atom")
-    h2_tags = soup.find_all("h2", class_="tn-atom")
-    div_tags = soup.find_all("div", class_="tn-atom")
+def fetch_page(url: str) -> str:
 
-    h1_texts = clean_texts([tag.text.strip() for tag in h1_tags])
-    h2_texts = clean_texts([tag.text.strip() for tag in h2_tags])
-    div_texts = clean_texts([tag.text.strip() for tag in div_tags])
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/120.0.0.0 Safari/537.36"
+    }
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            res = requests.get(url, headers=headers, timeout=10)
+            if res.status_code == 200:
+                return res.text
+            else:
+                # TODO: Log
+                print(f"{url} — ошибка {res.status_code}, попытка {attempt}")
+        except Exception as e:
+            # TODO: Log
+            print(f"{url} — исключение: {e}, попытка {attempt}")
+        time.sleep(RETRY_DELAY)
+    # TODO: Log
+    print(f"{url} — не удалось загрузить страницу после {MAX_RETRIES} попыток")
+    return ""
 
-    return EoraInfo(
-        h1=" | ".join(h1_texts),
-        h2=" | ".join(h2_texts),
-        div=" | ".join(div_texts),
+
+def parser(url: str) -> EoraInfoSchema:
+    html = fetch_page(url)
+    if not html:
+        return EoraInfoSchema(case_="*")  # если страница не загрузилась
+
+    soup = BeautifulSoup(html.strip(), "lxml")
+
+    case_tags = soup.find_all("a", class_="t-menu__link-item")
+    case_ = clean_texts([get_full_text(tag) for tag in case_tags])
+
+    description_tags = soup.find_all(["h1", "h2", "div"], class_="tn-atom")
+    description = clean_texts([get_full_text(tag) for tag in description_tags])
+
+    return EoraInfoSchema(
+        case_="  | ".join(case_),
+        description="  | ".join(description),
     )
 
 
-def write_csv(data: EoraInfo):
-    with open("eora.csv", mode="a", newline="") as file:
-        writer = csv.writer(file)
+def write_csv(index: int, data: EoraInfoSchema, url: str):
+    with open("eora.csv", mode="a", newline="", encoding="utf-8-sig") as file:
+        writer = csv.writer(file, delimiter=",", quoting=csv.QUOTE_MINIMAL)
         writer.writerow(
             [
-                normalize_text(data.h1),
-                normalize_text(data.h2),
-                normalize_text(data.div),
+                index + 1,
+                normalize_text(data.case_),
+                normalize_text(data.description),
+                url,
             ]
         )
+        writer.writerow(["---"])
 
 
 if __name__ == "__main__":
-    url = "https://eora.ru/cases/computer-vision/lamoda-systema-segmentacii-i-poiska-po-pohozhey-odezhde"
-    eora_info_data = parser(url=url)
-    write_csv(data=eora_info_data)
+    for i, url in enumerate(PARSE_PAGES):
+        eora_info_data = parser(url=url)
+        write_csv(i, eora_info_data, url)

@@ -11,3 +11,6 @@ install:
 
 parse:
 	uv run python -m src.core.parser.parser
+
+run:
+	uv run main.py

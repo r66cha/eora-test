@@ -1,17 +1,23 @@
+"""Модуль"""
+
 from dataclasses import dataclass
 
 
 @dataclass
 class EoraInfo:
-    h1: str
-    h2: str
-    div: str
+    case_: str
+    description: str
 
 
-@dataclass
-class EoraInfoJSON:
-    idx: int
-    category: str
-    case_for: str
-    title: str
-    description: list[str]
+# {
+#     "catagory_1": {
+#         1: {
+#             "case_for": "some case",
+#             "description": [
+#                 "text1",
+#                 "text2",
+#             ],
+#             "link": "some link",
+#         },
+#     },
+# }
