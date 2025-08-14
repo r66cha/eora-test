@@ -2,21 +2,31 @@
 
 # -- Imports
 
+
 import time
 import re
 import csv
 import requests
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 
-# from src.core.parser import EoraInfo
+
+from pathlib import Path
 from src.core.schemas import EoraInfoSchema
 from src.core.parser import EXCLUDE_KEYWORDS
-from src.core.parser.pages import PARSE_PAGES
+from src.core.parser import PARSE_PAGES
+
 
 # --
 
 MAX_RETRIES = 5
 RETRY_DELAY = 2
+
+
+BASE_DIR = Path(__file__).resolve().parent
+file_path_csv = BASE_DIR / "eora_data.csv"
+file_path_str = BASE_DIR / "eora_data_str.py"
+
 
 # --
 
@@ -44,7 +54,7 @@ def clean_texts(texts: list[str]) -> list[str]:
     return result
 
 
-def get_full_text(tag) -> str:
+def get_full_text(tag: Tag) -> str:
     return "".join(tag.strings)
 
 
@@ -82,7 +92,7 @@ def parser(url: str) -> EoraInfoSchema:
     case_tags = soup.find_all("a", class_="t-menu__link-item")
     case_ = clean_texts([get_full_text(tag) for tag in case_tags])
 
-    description_tags = soup.find_all(["h1", "h2", "div"], class_="tn-atom")
+    description_tags = soup.find_all(["h1"], class_="tn-atom")
     description = clean_texts([get_full_text(tag) for tag in description_tags])
 
     return EoraInfoSchema(
@@ -92,20 +102,31 @@ def parser(url: str) -> EoraInfoSchema:
 
 
 def write_csv(index: int, data: EoraInfoSchema, url: str):
-    with open("eora.csv", mode="a", newline="", encoding="utf-8-sig") as file:
+    file_path = BASE_DIR / "eora_data.csv"
+    with open(file_path, mode="a", newline="", encoding="utf-8-sig") as file:
         writer = csv.writer(file, delimiter=",", quoting=csv.QUOTE_MINIMAL)
         writer.writerow(
             [
                 index + 1,
                 normalize_text(data.case_),
                 normalize_text(data.description),
-                url,
+                "\nCсылка: " + url,
             ]
         )
         writer.writerow(["---"])
+
+
+def write_str():
+    with file_path_csv.open("r", encoding="utf-8") as f:
+        lines = [line.strip() for line in f if line.strip()]
+    data_str = "\n".join(lines)
+
+    with file_path_str.open("w", encoding="utf-8") as f:
+        f.write(f'EORA_DATA_STR = """{data_str}"""\n')
 
 
 if __name__ == "__main__":
     for i, url in enumerate(PARSE_PAGES):
         eora_info_data = parser(url=url)
         write_csv(i, eora_info_data, url)
+    write_str()

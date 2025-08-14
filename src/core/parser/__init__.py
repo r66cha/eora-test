@@ -1,2 +1,2 @@
 from .exclude_words import *
-from .models import EoraInfo
+from .pages import PARSE_PAGES

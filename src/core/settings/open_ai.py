@@ -12,10 +12,10 @@ __all__ = ["open_ai_config"]
 
 
 class OpenAIConnectionConfig(BaseSettings):
-    # TODO: Docstring
+    """Класс схемы настройки подключения к OpenAI API."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",  # env.example
+        env_file=".env",  # env.dev
         extra="ignore",
     )
 

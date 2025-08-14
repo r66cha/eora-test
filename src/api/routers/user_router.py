@@ -1,4 +1,4 @@
-"""User Routers module."""
+"""Модуль роутеров для пользователя."""
 
 # -- Imports
 
@@ -6,22 +6,22 @@ import logging
 from fastapi import (
     APIRouter,
     status,
-    Request,
-    Response,
-    UploadFile,
     HTTPException,
     Depends,
-    Header,
     Body,
-    Form,
-    Cookie,
-    File,
 )
 
+from src.core.services import get_assistant
 from src.core.config import settings
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.core.services.ai_assistant import AssistantOpenAI
 
 
 # --
@@ -49,11 +49,19 @@ user_router = APIRouter(
     name="Eora-Chat",
 )
 async def set_info_about_me(
+    assistant: "AssistantOpenAI" = Depends(get_assistant),
     data: dict = Body(
         ...,
         example={"User": {"message": "А что вы делали для интернет магазинов одежды?"}},
-    )
+    ),
 ):
-    """Router for chat"""
+    """В этом роутере напишите свой вопрос ассистенту как показано в примере."""
 
-    return {"received": data}
+    try:
+
+        msg = data.get("User", {"Message": "Hello"}).get("message", "")
+        res = await assistant.process(msg)
+        return {"Ассистент EORA": res}
+
+    except HTTPException as e:
+        log.error(f"Exception: {e}")

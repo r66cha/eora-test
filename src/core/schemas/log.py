@@ -1,4 +1,4 @@
-"""Logging configuration schema"""
+"""Модуль схемы логирования."""
 
 # -- Imports
 
@@ -19,7 +19,7 @@ LOG_DEFAULT_FORMAT = (
 
 
 class LoggingConfigSchema(BaseModel):
-    """Schema for configuring logging level and format."""
+    """Схема настройки уровня и формата логирования."""
 
     log_level: Literal[
         "debug",
@@ -28,10 +28,11 @@ class LoggingConfigSchema(BaseModel):
         "error",
         "critical",
     ] = "info"
+
     log_format: str = LOG_DEFAULT_FORMAT
 
     @property
     def log_level_value(self) -> int:
-        """Converts string log level to corresponding numeric constant."""
+        """Преобразует уровень строкового значения в соответствующую числовую константу.."""
 
         return logging.getLevelNamesMapping()[self.log_level.upper()]

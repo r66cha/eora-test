@@ -8,9 +8,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from .description import title, description, version
 from src.api.routers._0_main_router import main_router
 from fastapi.responses import ORJSONResponse
+from src.core.config import settings
 
+# --
 
 log = logging.getLogger(__name__)
+logging.basicConfig(
+    level=settings.logging.log_level_value,
+    format=settings.logging.log_format,
+)
+
+# --
 
 
 def create_app() -> FastAPI:

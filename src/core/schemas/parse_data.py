@@ -12,8 +12,7 @@ __all__ = ["EoraInfoSchema"]
 
 
 class EoraInfoSchema(BaseModel):
-    # TODO: Docstring
-    """Docstring"""
+    """Парсинг схема."""
 
     case_: str
     description: str

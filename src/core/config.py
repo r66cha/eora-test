@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         case_sensitive=False,
-        env_file=(BASE_DIR / ".env"),  # env.example
+        env_file=(BASE_DIR / ".env"),  # env.dev
     )
 
     # --

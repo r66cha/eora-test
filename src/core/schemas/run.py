@@ -1,4 +1,4 @@
-"""Configuration schemas for application runtime and Gunicorn server."""
+"""Схемы конфигурации для среды выполнения приложений и сервера Uvicorn."""
 
 # -- Imports
 
@@ -12,7 +12,7 @@ __all__ = ["RunConfigSchema"]
 
 
 class RunConfigSchema(BaseModel):
-    """Configuration for running the application."""
+    """Схема конфигурации API."""
 
     host: str = "0.0.0.0"
     port: int = 8000

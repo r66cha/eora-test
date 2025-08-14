@@ -1,4 +1,4 @@
-"""Schema configuration for constructing API endpoint paths."""
+"""Модуль конфигурации схемы для построения путей к конечным точкам API.."""
 
 # -- Imports
 
@@ -12,7 +12,7 @@ __all__ = ["ApiSchema"]
 
 
 class ApiSchema(BaseModel):
-    """Configuration schema for base API endpoints."""
+    """Схема конфигурации для конечных точек базового API."""
 
     prefix: str = "/eora"
     chat: str = "/chat"

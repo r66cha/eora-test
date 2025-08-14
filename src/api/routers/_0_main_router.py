@@ -1,8 +1,8 @@
-"""Main app router"""
+"""Главный роутер приложения"""
 
 # -- Imports
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from src.core.config import settings
 from src.api.routers.user_router import user_router
 
