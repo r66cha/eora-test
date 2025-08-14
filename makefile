@@ -14,3 +14,7 @@ parse:
 
 run:
 	uv run main.py
+
+
+build:
+	docker compose up --build -d
