@@ -18,3 +18,7 @@ run:
 
 build:
 	docker compose up --build -d
+
+run-all:
+	pip install -r requirements.txt
+	python3 main.py
