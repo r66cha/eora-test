@@ -42,7 +42,7 @@ user_router = APIRouter(
 # --
 
 
-# Eora-Chat endpoint | (REST) | Without webhook
+# Eora-Chat endpoint
 @user_router.post(
     "/",
     status_code=status.HTTP_200_OK,
