@@ -42,7 +42,7 @@ user_router = APIRouter(
 # --
 
 
-# Eora-Chat endpoint
+# Eora-Chat endpoint | Можно было сделать GET запрос и использовать Query параметр, но я предпочел POST
 @user_router.post(
     "/",
     status_code=status.HTTP_200_OK,

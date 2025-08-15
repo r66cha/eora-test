@@ -13,6 +13,7 @@
 ```bash
 git clone https://github.com/r66cha/eora-test.git
 cd eora-test
+code .
 ```
 
 ### 2. Запустите
